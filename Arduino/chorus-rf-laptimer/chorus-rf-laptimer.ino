@@ -99,6 +99,7 @@ const uint16_t musicNotes[] PROGMEM = { 523, 587, 659, 698, 784, 880, 988, 1046 
 #define CONTROL_SET_MIN_LAP     'L'
 #define CONTROL_SET_CHANNEL     'H'
 #define CONTROL_SET_BAND        'N'
+#define CONTROL_SET_LEDCOLOR    'Z'
 
 // output id byte constants
 #define RESPONSE_CHANNEL        'C'
@@ -216,6 +217,7 @@ uint8_t proxyBufDataSize = 0;
 // ----------------NeoPixels -----------------------------------------------
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPin, NEO_GRB + NEO_KHZ800);
+uint8_t DeviceColor[3];
 
 // ----------------------------------------------------------------------------
 void setup() {
@@ -245,6 +247,7 @@ void setup() {
     digitalLow(led);
 
     //Setup of Neopixels (set all to Black / OFF)
+    pinMode(LEDPin, OUTPUT);
     pixels.begin(); // This initializes the NeoPixel library.
     for(int i=0;i<NUMPIXELS;i++)
     {
@@ -289,6 +292,7 @@ void loop() {
                             newLapIndex++;
                             lastLapsNotSent++;
                             addToSendQueue(SEND_LAST_LAPTIMES);
+                            setColor(DeviceColor[0],DeviceColor[1],DeviceColor[2]);
                         }
                         lastMilliseconds = now;
                         playLapTones(); // during the race play tone sequence even if no more laps can be logged
@@ -564,6 +568,7 @@ void handleSerialControlInput(uint8_t *controlData, uint8_t length) {
                 playStartRaceTones();
                 addToSendQueue(SEND_RACE_STATE);
                 isConfigured = 1;
+                setColor(0,255,0);
                 break;
             case CONTROL_END_CALIBRATE: // end calibration
                 calibrationMilliseconds = millis() - calibrationMilliseconds;
@@ -725,6 +730,7 @@ void readSerialDataChunk () {
                     MODULE_ID_HEX = readBuf[1];
                     MODULE_ID = TO_BYTE(MODULE_ID_HEX);
                     readBuf[1] = TO_HEX(MODULE_ID + 1);
+                    setColorforDevice(MODULE_ID);
                     break;
             }
             if (shouldPassMsgFurther) {
@@ -903,17 +909,63 @@ uint16_t readVoltage() {
     voltageA = voltageA/VOLTAGE_READS; // average of RSSI_READS readings
     return voltageA;
 }
+// ------------------LED Functions----------------------------------------------
 
-void setColor(uint16_t red, uint16_t green, uint16_t blue) {
+void setColorforDevice(uint16_t MODULE_ID) {
 
   // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
 
-  if ( red > 255 || green > 255 || blue > 255)
+  switch (MODULE_ID)
   {
-  return;  
-  }
+     case 0: 
+            DeviceColor[0] = 0;
+            DeviceColor[1] = 0;
+            DeviceColor[2] = 255;
+            break;
+     case 1: 
+            DeviceColor[0] = 0;
+            DeviceColor[1] = 255;
+            DeviceColor[2] = 255;
+            break;
+     case 2: 
+            DeviceColor[0] = 255;
+            DeviceColor[1] = 0;
+            DeviceColor[2] = 255;
+            break;
+     case 3: 
+            DeviceColor[0] = 255;
+            DeviceColor[1] = 255;
+            DeviceColor[2] = 0;
+            break;
+     case 4: 
+            DeviceColor[0] = 155;
+            DeviceColor[1] = 139;
+            DeviceColor[2] = 255;
+            break;
+     case 5: 
+            DeviceColor[0] = 255;
+            DeviceColor[1] = 0;
+            DeviceColor[2] = 0;
+            break;
+     case 6: 
+            DeviceColor[0] = 255;
+            DeviceColor[1] = 125;
+            DeviceColor[2] = 0;
+            break;
+     case 7: 
+            DeviceColor[0] = 255;
+            DeviceColor[1] = 255;
+            DeviceColor[2] = 255;
+            break;
+            
+    
+    }
 
-  for(int i=0;i<NUMPIXELS;i++){
+}
+
+void setColor (uint16_t red,uint16_t green,uint16_t blue)
+{
+ for(int i=0;i<NUMPIXELS;i++){
 
     // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
     pixels.setPixelColor(i, pixels.Color(red,green,blue)); // Moderately bright green color.
@@ -921,5 +973,9 @@ void setColor(uint16_t red, uint16_t green, uint16_t blue) {
     pixels.show(); // This sends the updated pixel color to the hardware.
 
   }
+  
 }
+
+
+
 
