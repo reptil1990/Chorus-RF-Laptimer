@@ -37,6 +37,7 @@ SOFTWARE.
 #define rssiPinA 3  //analog
 #define voltagePinA 0  //analog
 #define buzzerPin 9 // PWM buzzer
+#define LEDPin 6 //LED Pin 
 
 #ifdef DEBUG
     #define loopTimerPin 4

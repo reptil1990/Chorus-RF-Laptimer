@@ -58,8 +58,11 @@ uint8_t MODULE_ID_HEX = '0';
 #include "sendSerialHex.h"
 #include "rx5808spi.h"
 #include "sounds.h"
+#include <Adafruit_NeoPixel.h>
+
 
 #define BAUDRATE 115200
+#define NUMPIXELS      16
 
 const uint16_t musicNotes[] PROGMEM = { 523, 587, 659, 698, 784, 880, 988, 1046 };
 
@@ -210,6 +213,10 @@ uint8_t proxyBuf[READ_BUFFER_SIZE];
 uint8_t readBufFilledBytes = 0;
 uint8_t proxyBufDataSize = 0;
 
+// ----------------NeoPixels -----------------------------------------------
+
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPin, NEO_GRB + NEO_KHZ800);
+
 // ----------------------------------------------------------------------------
 void setup() {
     // initialize digital pin 13 LED as an output.
@@ -236,6 +243,18 @@ void setup() {
 
     // Setup Done - Turn Status LED off.
     digitalLow(led);
+
+    //Setup of Neopixels (set all to Black / OFF)
+    pixels.begin(); // This initializes the NeoPixel library.
+    for(int i=0;i<NUMPIXELS;i++)
+    {
+    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
+    pixels.setPixelColor(i, pixels.Color(0,0,0)); // Black color.
+    pixels.show(); // This sends the updated pixel color to the hardware.
+
+    }
+
+
 
     DEBUG_CODE(
         pinMode(serialTimerPin, OUTPUT);
@@ -884,3 +903,23 @@ uint16_t readVoltage() {
     voltageA = voltageA/VOLTAGE_READS; // average of RSSI_READS readings
     return voltageA;
 }
+
+void setColor(uint16_t red, uint16_t green, uint16_t blue) {
+
+  // For a set of NeoPixels the first NeoPixel is 0, second is 1, all the way up to the count of pixels minus one.
+
+  if ( red > 255 || green > 255 || blue > 255)
+  {
+  return;  
+  }
+
+  for(int i=0;i<NUMPIXELS;i++){
+
+    // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
+    pixels.setPixelColor(i, pixels.Color(red,green,blue)); // Moderately bright green color.
+
+    pixels.show(); // This sends the updated pixel color to the hardware.
+
+  }
+}
+
