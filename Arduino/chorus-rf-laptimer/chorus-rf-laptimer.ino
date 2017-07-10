@@ -219,7 +219,7 @@ uint8_t proxyBufDataSize = 0;
 // ----------------NeoPixels -----------------------------------------------
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, LEDPin, NEO_GRB + NEO_KHZ800);
-uint8_t DeviceColor[3];
+uint8_t DeviceColor;
 
 // ----------------------------------------------------------------------------
 void setup() {
@@ -294,7 +294,7 @@ void loop() {
                             newLapIndex++;
                             lastLapsNotSent++;
                             addToSendQueue(SEND_LAST_LAPTIMES);
-                            setColor(DeviceColor[0],DeviceColor[1],DeviceColor[2]);
+                            setColorToOutput(DeviceColor);
                         }
                         lastMilliseconds = now;
                         playLapTones(); // during the race play tone sequence even if no more laps can be logged
@@ -575,7 +575,7 @@ void handleSerialControlInput(uint8_t *controlData, uint8_t length) {
                 playStartRaceTones();
                 addToSendQueue(SEND_RACE_STATE);
                 isConfigured = 1;
-                setColor(0,255,0);
+                setColorToOutput(0x00FF00);
                 break;
             case CONTROL_END_CALIBRATE: // end calibration
                 calibrationMilliseconds = millis() - calibrationMilliseconds;
@@ -681,6 +681,7 @@ void handleSerialControlInput(uint8_t *controlData, uint8_t length) {
                 break;
              case CONTROL_SET_LEDCOLOR: // request LEDColor
                 addToSendQueue(SEND_LEDCOLOR);
+                setColorToOutput(DeviceColor);
                 break;
         }
     }
@@ -928,53 +929,41 @@ void setColorforDevice(uint16_t MODULE_ID) {
   switch (MODULE_ID)
   {
      case 0: 
-            DeviceColor[0] = 0;
-            DeviceColor[1] = 0;
-            DeviceColor[2] = 255;
+            DeviceColor = 0x0000FF;
             break;
      case 1: 
-            DeviceColor[0] = 0;
-            DeviceColor[1] = 255;
-            DeviceColor[2] = 255;
+            DeviceColor = 0x00FFFF;
             break;
      case 2: 
-            DeviceColor[0] = 255;
-            DeviceColor[1] = 0;
-            DeviceColor[2] = 255;
+            DeviceColor = 0xFF00FF;
             break;
      case 3: 
-            DeviceColor[0] = 255;
-            DeviceColor[1] = 255;
-            DeviceColor[2] = 0;
+            DeviceColor = 0xFFFF00;
             break;
      case 4: 
-            DeviceColor[0] = 155;
-            DeviceColor[1] = 139;
-            DeviceColor[2] = 255;
+            DeviceColor = 0x0F6FFF;
             break;
      case 5: 
-            DeviceColor[0] = 255;
-            DeviceColor[1] = 0;
-            DeviceColor[2] = 0;
+            DeviceColor = 0xFF0000;
             break;
      case 6: 
-            DeviceColor[0] = 255;
-            DeviceColor[1] = 125;
-            DeviceColor[2] = 0;
+            DeviceColor = 0xFF6F00;
             break;
      case 7: 
-            DeviceColor[0] = 255;
-            DeviceColor[1] = 255;
-            DeviceColor[2] = 255;
+            DeviceColor = 0xFFFFFF;
             break;
-            
-    
+           
     }
 
 }
 
-void setColor (uint16_t red,uint16_t green,uint16_t blue)
+void setColorToOutput(uint16_t color)
 {
+    uint16_t red = ((color >> 16) & 0xFF) / 255.0;
+    uint16_t green = ((color >> 8) & 0xFF) / 255.0;;
+    uint16_t blue = ((color) & 0xFF) / 255.0;
+
+  
  for(int i=0;i<NUMPIXELS;i++){
 
     // pixels.Color takes RGB values, from 0,0,0 up to 255,255,255
