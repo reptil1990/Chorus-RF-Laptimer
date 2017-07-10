@@ -117,6 +117,7 @@ const uint16_t musicNotes[] PROGMEM = { 523, 587, 659, 698, 784, 880, 988, 1046 
 #define RESPONSE_END_SEQUENCE   'X'
 #define RESPONSE_IS_CONFIGURED  'P'
 #define RESPONSE_VOLTAGE        'Y'
+#define RESPONSE_LEDCOLOR       'z'
 
 // send item byte constants
 // Must correspond to sequence of numbers used in "send data" switch statement
@@ -132,7 +133,8 @@ const uint16_t musicNotes[] PROGMEM = { 523, 587, 659, 698, 784, 880, 988, 1046 
 #define SEND_MONITOR_STATE  8
 #define SEND_LAP0_STATE     9
 #define SEND_IS_CONFIGURED  10
-#define SEND_END_SEQUENCE   11
+#define SEND_LEDCOLOR       11
+#define SEND_END_SEQUENCE   12
 // following items don't participate in "send all items" response
 #define SEND_LAST_LAPTIMES  100
 #define SEND_CALIBR_TIME    101
@@ -380,9 +382,14 @@ void loop() {
                     onItemSent();
                 }
                 break;
+            case 11: // SEND_LEDCOLOR
+                if (send4BitsToSerial(RESPONSE_LEDCOLOR, DeviceColor)) {
+                    onItemSent();
+                }
+                break;
             // Below is a termination case, to notify that data for CONTROL_DATA_REQUEST is over.
             // Must be the last item in the sequence!
-            case 11: // SEND_END_SEQUENCE
+            case 12: // SEND_END_SEQUENCE
                 if (send4BitsToSerial(RESPONSE_END_SEQUENCE, 1)) {
                     onItemSent();
                     isSendingData = 0;
@@ -671,6 +678,9 @@ void handleSerialControlInput(uint8_t *controlData, uint8_t length) {
                 break;
             case CONTROL_DATA_REQUEST: // request all data
                 addToSendQueue(SEND_ALL_DEVICE_STATE);
+                break;
+             case CONTROL_SET_LEDCOLOR: // request LEDColor
+                addToSendQueue(SEND_LEDCOLOR);
                 break;
         }
     }
